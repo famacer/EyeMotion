@@ -21,7 +21,7 @@ EyeMotion 是一款专为眼部健康设计的动态视觉追踪训练程序。�
 - **P 键**：开启/关闭背景音乐
 - **R 键**：训练结束后重新开始
 - **ESC 键**：退出程序
-- **窗口控制**（左上角）：
+- **窗口控制**（右上角）：
   - 🔵 最小化 | 🟡 全屏切换 | 🔴 关闭
 
 ### 🩺 医学益处
@@ -55,7 +55,7 @@ EyeMotion is a dynamic visual tracking training program designed for eye health.
 - **P**: Toggle Background Music
 - **R**: Restart after training ends
 - **ESC**: Exit Program
-- **Window Controls** (Top-left):
+- **Window Controls** (Top-Right):
   - 🔵 Minimize | 🟡 Toggle Fullscreen | 🔴 Close
 
 ### 🩺 Medical Benefits
