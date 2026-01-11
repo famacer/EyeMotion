@@ -4,12 +4,14 @@ class I18n {
         this.translations = {};
         this.ready = false;
         
+        console.log('I18n: Constructor called, current locale:', this.currentLocale);
+        
         this.loadTranslations(this.currentLocale);
     }
 
     detectLocale() {
-        const browserLang = navigator.language || navigator.userLanguage;
-        if (browserLang && browserLang.startsWith('zh')) {
+        const browserLang = navigator.language || navigator.userLanguage || 'en';
+        if (browserLang && browserLang.toLowerCase().startsWith('zh')) {
             const lang = browserLang.toLowerCase();
             if (lang.includes('hans') || lang.includes('cn')) {
                 return 'zh-Hans';
@@ -21,22 +23,39 @@ class I18n {
     }
 
     loadTranslations(locale) {
-        fetch(`./locales/${locale}.json`)
-            .then(response => response.json())
+        const url = `./locales/${locale}.json`;
+        console.log('I18n: Loading locale from:', url);
+        
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 this.translations = data;
                 this.currentLocale = locale;
                 this.ready = true;
-                console.log(`I18n: Loaded locale "${locale}"`);
-                document.dispatchEvent(new CustomEvent('i18n-ready'));
+                console.log('I18n: Locale loaded successfully:', locale);
+                console.log('I18n: Translations:', data);
+                document.dispatchEvent(new CustomEvent('i18n-ready', { 
+                    detail: { locale: locale }
+                }));
             })
-            .catch(e => {
-                console.error('I18n: Failed to load locale, using fallback', e);
+            .catch(error => {
+                console.error('I18n: Failed to load locale:', locale, error);
+                
                 if (locale !== 'en') {
+                    console.log('I18n: Falling back to English');
                     this.loadTranslations('en');
                 } else {
                     this.translations = {};
                     this.ready = true;
+                    console.warn('I18n: Using empty translations (fallback failed)');
+                    document.dispatchEvent(new CustomEvent('i18n-ready', { 
+                        detail: { locale: 'en' }
+                    }));
                 }
             });
     }
@@ -60,13 +79,14 @@ class I18n {
         return key;
     }
 
-    setLocale(locale) {
+    async setLocale(locale) {
+        console.log('I18n: Setting locale to:', locale);
         this.currentLocale = locale;
         this.loadTranslations(locale);
         
         if (window.__TAURI__) {
             window.__TAURI__.core.invoke('set_language', { language: locale })
-                .catch(e => console.error('I18n: Failed to save language', e));
+                .catch(e => console.error('I18n: Failed to save language:', e));
         }
     }
 

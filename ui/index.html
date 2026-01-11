@@ -28,7 +28,32 @@
     <!-- Language Menu -->
     <div id="language-menu"></div>
     
-    <!-- Scripts -->
+    <!-- Main Initialization Script -->
+    <script>
+        window.addEventListener('load', function() {
+            console.log('Page loaded, waiting for scripts...');
+        });
+
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded');
+            
+            setTimeout(function() {
+                console.log('Starting game initialization...');
+                try {
+                    if (typeof window.Game !== 'undefined') {
+                        console.log('Creating Game instance...');
+                        new Game();
+                    } else {
+                        console.error('Game class not found!');
+                    }
+                } catch (e) {
+                    console.error('Initialization error:', e);
+                }
+            }, 100);
+        });
+    </script>
+    
+    <!-- Load All Scripts -->
     <script src="js/i18n.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/input.js"></script>

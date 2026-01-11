@@ -14,34 +14,32 @@ class Game {
         this.tickTimeout = null;
         this.gameStarted = false;
         
-        window.addEventListener('DOMContentLoaded', () => this.init());
+        this.init();
     }
     
-    init() {
+    async init() {
         console.log('Game: Initializing...');
         
         this.setupEventListeners();
         createLanguageMenu();
         
         this.renderer.loadTheme();
+        this.audio.init();
         
-        window.audio.init();
-        
-        if (window.__TAURI__) {
-            window.__TAURI__.core.invoke('get_language')
-                .then(savedLang => {
-                    if (savedLang) {
-                        setLocale(savedLang);
-                    }
-                })
-                .catch(e => console.warn('Game: Failed to load saved language', e));
+        try {
+            const savedLang = window.__TAURI__ ? await window.__TAURI__.core.invoke('get_language') : null;
+            if (savedLang) {
+                setLocale(savedLang);
+            }
+        } catch (e) {
+            console.warn('Game: Failed to load saved language:', e);
         }
         
         setTimeout(() => {
+            console.log('Starting game loop...');
             requestAnimationFrame((t) => this.gameLoop(t));
             window.game = this;
-            console.log('Game: Initialization complete, game loop started');
-        }, 500);
+        }, 200);
     }
     
     setupEventListeners() {
@@ -59,11 +57,11 @@ class Game {
                 this.exit();
             } else if (key === 'KeyP') {
                 this.audio.toggleMusic();
-            }
+                }
         });
         
         this.input.on('touch', (e) => {
-            window.audio.resume();
+            this.audio.resume();
             if (this.gameState?.is_start_screen) {
                 this.startGame();
             } else {
@@ -77,9 +75,9 @@ class Game {
                 if (btnId === 'ctrl-close') {
                     window.__TAURI__.core.invoke('exit_app');
                 } else if (btnId === 'ctrl-min') {
-                    window.__TAURI__.invoke('plugin:window|set_minimized');
+                    window.__TAURI__.core.invoke('plugin:window|set_minimized', { minimized: true });
                 } else if (btnId === 'ctrl-max') {
-                    window.__TAURI__.invoke('plugin:window|toggle_maximize');
+                    window.__TAURI__.core.invoke('plugin:window|toggle_maximize');
                 }
             }
         });
@@ -168,8 +166,9 @@ class Game {
     }
     
     async startGame() {
+        console.log('Game: Starting game...');
         this.gameStarted = true;
-        window.audio.startBGM();
+        this.audio.startBGM();
         if (window.__TAURI__) {
             await this.safeInvoke('start_game', {});
         }
@@ -180,15 +179,16 @@ class Game {
             await this.safeInvoke('toggle_pause', {});
         }
         if (this.gameStarted && !this.gameState?.paused) {
-            window.audio.stopBGM();
+            this.audio.stopBGM();
         } else if (this.gameStarted && this.gameState?.paused) {
-            window.audio.startBGM();
+            this.audio.startBGM();
         }
     }
     
     async restart() {
+        console.log('Game: Restarting...');
         this.gameStarted = false;
-        window.audio.stopBGM();
+        this.audio.stopBGM();
         if (window.__TAURI__) {
             await this.safeInvoke('reset_game', {
                 w: window.innerWidth,
@@ -198,7 +198,7 @@ class Game {
     }
     
     exit() {
-        window.audio.stopBGM();
+        this.audio.stopBGM();
         if (window.__TAURI__) {
             window.__TAURI__.core.invoke('exit_app');
         }

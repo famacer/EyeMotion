@@ -8,26 +8,49 @@ class AudioPlayer {
     }
 
     init() {
-        if (this.initialized) return;
+        if (this.initialized) {
+            console.log('Audio: Already initialized');
+            return;
+        }
+        
+        console.log('Audio: Initializing...');
         
         try {
-            const AudioContext = window.AudioContext || window.webkitAudioContext;
-            this.audioCtx = new AudioContext();
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) {
+                throw new Error('AudioContext not supported');
+            }
+            
+            this.audioCtx = new AudioContextClass();
             this.bgmPlayer = new BGMPlayer(this.audioCtx);
             this.initialized = true;
+            
+            console.log('Audio: Initialized successfully');
+            console.log('Audio: Sample rate:', this.audioCtx.sampleRate);
         } catch (e) {
             console.error('Audio initialization failed:', e);
+            this.initialized = true;
         }
     }
 
     async resume() {
         if (this.audioCtx && this.audioCtx.state === 'suspended') {
-            await this.audioCtx.resume();
+            try {
+                await this.audioCtx.resume();
+                console.log('Audio: Resumed successfully');
+            } catch (e) {
+                console.error('Audio: Failed to resume:', e);
+            }
         }
     }
 
     startBGM() {
-        if (this.bgmPlayer && this.bgmEnabled) {
+        if (!this.initialized || !this.bgmPlayer) {
+            console.warn('Audio: Not initialized or BGM player missing');
+            return;
+        }
+        
+        if (this.bgmEnabled) {
             this.bgmPlayer.start();
             console.log('Audio: BGM started');
         }
@@ -42,31 +65,40 @@ class AudioPlayer {
 
     toggleMusic() {
         this.bgmEnabled = !this.bgmEnabled;
+        console.log('Audio: Music enabled:', this.bgmEnabled);
+        
         if (this.bgmPlayer) {
             this.bgmPlayer.toggle(this.bgmEnabled);
         }
     }
 
     playBounce() {
-        if (!this.sfxEnabled || !this.audioCtx) return;
+        if (!this.sfxEnabled || !this.audioCtx) {
+            console.warn('Audio: SFX disabled or AudioContext not available');
+            return;
+        }
         
         this.resume();
         
-        const osc = this.audioCtx.createOscillator();
-        const gain = this.audioCtx.createGain();
+        try {
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
 
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(150, this.audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(75, this.audioCtx.currentTime + 0.08);
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(150, this.audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(75, this.audioCtx.currentTime + 0.08);
 
-        gain.gain.setValueAtTime(0.8, this.audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.08);
+            gain.gain.setValueAtTime(0.8, this.audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.08);
 
-        osc.connect(gain);
-        gain.connect(this.audioCtx.destination);
+            osc.connect(gain);
+            gain.connect(this.audioCtx.destination);
 
-        osc.start();
-        osc.stop(this.audioCtx.currentTime + 0.08);
+            osc.start();
+            osc.stop(this.audioCtx.currentTime + 0.08);
+        } catch (e) {
+            console.error('Audio: Failed to play bounce sound:', e);
+        }
     }
 
     setVolume(volume) {
