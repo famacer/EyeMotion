@@ -23,6 +23,7 @@ class Game {
         createLanguageMenu();
         
         this.renderer.loadTheme();
+        this.audio.init();
         
         if (window.__TAURI__) {
             try {
@@ -65,6 +66,19 @@ class Game {
                 this.startGame();
             } else {
                 this.togglePause();
+            }
+        });
+
+        this.input.on('window-control', (btnId) => {
+            console.log('Game: Window control:', btnId);
+            if (window.__TAURI__) {
+                if (btnId === 'ctrl-min') {
+                    window.__TAURI__.core.invoke('plugin:window|set_minimized', { minimized: true });
+                } else if (btnId === 'ctrl-max') {
+                    window.__TAURI__.core.invoke('plugin:window|toggle_maximize');
+                } else if (btnId === 'ctrl-close') {
+                    window.__TAURI__.core.invoke('exit_app');
+                }
             }
         });
     }

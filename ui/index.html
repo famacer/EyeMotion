@@ -9,12 +9,23 @@
 <body>
     <canvas id="gameCanvas"></canvas>
     
+    <!-- Window Controls (macOS style buttons) -->
+    <div id="window-controls">
+        <div class="win-btn btn-min" id="ctrl-min"></div>
+        <div class="win-btn btn-max" id="ctrl-max"></div>
+        <div class="win-btn btn-close" id="ctrl-close"></div>
+    </div>
+    
+    <!-- Loading Overlay -->
     <div id="loading-overlay">
         <div class="loading-spinner"></div>
         <p data-i18n="loading">Loading...</p>
     </div>
     
+    <!-- Virtual Controls (mobile only) -->
     <div id="virtual-controls"></div>
+    
+    <!-- Language Menu -->
     <div id="language-menu"></div>
     
     <script src="js/i18n.js"></script>
