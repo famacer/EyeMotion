@@ -51,6 +51,7 @@ class InputHandler {
 
     handleWindowControlClick(e) {
         const btnId = e.target.id;
+        console.log('Window control click:', btnId);
         this.emit('window-control', btnId);
     }
 

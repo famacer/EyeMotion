@@ -26,6 +26,20 @@ class AudioPlayer {
         }
     }
 
+    startBGM() {
+        if (this.bgmPlayer && this.bgmEnabled) {
+            this.bgmPlayer.start();
+            console.log('Audio: BGM started');
+        }
+    }
+
+    stopBGM() {
+        if (this.bgmPlayer) {
+            this.bgmPlayer.stop();
+            console.log('Audio: BGM stopped');
+        }
+    }
+
     toggleMusic() {
         this.bgmEnabled = !this.bgmEnabled;
         if (this.bgmPlayer) {
@@ -119,7 +133,7 @@ class BGMPlayer {
             if (!this.isPlaying) return;
 
             let now = this.audioCtx.currentTime;
-            
+
             if (this.isPlaying) {
                 if (beat % 4 === 0) {
                     let chordIdx = Math.floor(beat / 4) % this.chords.length;
@@ -157,11 +171,11 @@ class BGMPlayer {
         const g = this.audioCtx.createGain();
         osc.type = type;
         osc.frequency.value = freq;
-        
+
         g.gain.setValueAtTime(0, time);
         g.gain.linearRampToValueAtTime(vol, time + 0.02);
         g.gain.exponentialRampToValueAtTime(0.001, time + duration);
-        
+
         osc.connect(g);
         g.connect(this.mainGain);
         osc.start(time);

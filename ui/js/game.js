@@ -12,34 +12,36 @@ class Game {
         this.tickCount = 0;
         this.firstTick = true;
         this.tickTimeout = null;
+        this.gameStarted = false;
         
-        this.init();
+        window.addEventListener('DOMContentLoaded', () => this.init());
     }
     
-    async init() {
+    init() {
         console.log('Game: Initializing...');
         
         this.setupEventListeners();
         createLanguageMenu();
         
         this.renderer.loadTheme();
-        this.audio.init();
+        
+        window.audio.init();
         
         if (window.__TAURI__) {
-            try {
-                const savedLang = await window.__TAURI__.core.invoke('get_language');
-                if (savedLang) {
-                    setLocale(savedLang);
-                }
-            } catch (e) {
-                console.warn('Game: Failed to load saved language', e);
-            }
+            window.__TAURI__.core.invoke('get_language')
+                .then(savedLang => {
+                    if (savedLang) {
+                        setLocale(savedLang);
+                    }
+                })
+                .catch(e => console.warn('Game: Failed to load saved language', e));
         }
         
-        requestAnimationFrame((t) => this.gameLoop(t));
-        
-        window.game = this;
-        console.log('Game: Initialization complete');
+        setTimeout(() => {
+            requestAnimationFrame((t) => this.gameLoop(t));
+            window.game = this;
+            console.log('Game: Initialization complete, game loop started');
+        }, 500);
     }
     
     setupEventListeners() {
@@ -61,7 +63,7 @@ class Game {
         });
         
         this.input.on('touch', (e) => {
-            this.audio.resume();
+            window.audio.resume();
             if (this.gameState?.is_start_screen) {
                 this.startGame();
             } else {
@@ -72,12 +74,12 @@ class Game {
         this.input.on('window-control', (btnId) => {
             console.log('Game: Window control:', btnId);
             if (window.__TAURI__) {
-                if (btnId === 'ctrl-min') {
-                    window.__TAURI__.core.invoke('plugin:window|set_minimized', { minimized: true });
-                } else if (btnId === 'ctrl-max') {
-                    window.__TAURI__.core.invoke('plugin:window|toggle_maximize');
-                } else if (btnId === 'ctrl-close') {
+                if (btnId === 'ctrl-close') {
                     window.__TAURI__.core.invoke('exit_app');
+                } else if (btnId === 'ctrl-min') {
+                    window.__TAURI__.invoke('plugin:window|set_minimized');
+                } else if (btnId === 'ctrl-max') {
+                    window.__TAURI__.invoke('plugin:window|toggle_maximize');
                 }
             }
         });
@@ -93,9 +95,11 @@ class Game {
             
             try {
                 if (window.__TAURI__) {
-                    const [state, events] = await this.safeInvoke('tick', { dt });
+                    const result = await this.safeInvoke('tick', { dt });
                     
-                    if (state) {
+                    if (result && result[0]) {
+                        const [state, events] = result;
+                        
                         this.gameState = state;
                         window.gameState = state;
                         this.tickCount++;
@@ -164,6 +168,8 @@ class Game {
     }
     
     async startGame() {
+        this.gameStarted = true;
+        window.audio.startBGM();
         if (window.__TAURI__) {
             await this.safeInvoke('start_game', {});
         }
@@ -173,9 +179,16 @@ class Game {
         if (window.__TAURI__) {
             await this.safeInvoke('toggle_pause', {});
         }
+        if (this.gameStarted && !this.gameState?.paused) {
+            window.audio.stopBGM();
+        } else if (this.gameStarted && this.gameState?.paused) {
+            window.audio.startBGM();
+        }
     }
     
     async restart() {
+        this.gameStarted = false;
+        window.audio.stopBGM();
         if (window.__TAURI__) {
             await this.safeInvoke('reset_game', {
                 w: window.innerWidth,
@@ -185,15 +198,9 @@ class Game {
     }
     
     exit() {
+        window.audio.stopBGM();
         if (window.__TAURI__) {
             window.__TAURI__.core.invoke('exit_app');
         }
     }
 }
-
-window.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Content Loaded');
-    setTimeout(() => {
-        new Game();
-    }, 100);
-});
