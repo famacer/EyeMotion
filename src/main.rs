@@ -165,31 +165,39 @@ fn stage_direction(stage: i32) -> (f64, f64) {
     }
 }
 
-/// 生成简单的背景音乐数据
+/// 生成更自然、更舒适的背景音乐（氛围音）
 fn generate_bgm() -> Vec<i16> {
-    let duration = 4.0f64; // 循环周期 4 秒
+    let duration = 8.0f64; // 较长的循环周期
     let samples = (SAMPLE_RATE as f64 * duration).round() as usize;
     let mut data = Vec::with_capacity(samples * 2);
-    let base_freq = 60.0;
+    
+    // 使用多个谐波叠加，产生柔和的氛围感
+    let harmonics = [(80.0, 0.2), (120.0, 0.15), (160.0, 0.1)];
     
     for i in 0..samples {
         let t = i as f64 / SAMPLE_RATE as f64;
-        // 使用两个不同频率的正弦波叠加，产生稍微复杂的背景音
-        let s1 = (2.0 * PI * base_freq * t).sin() * 0.3;
-        let s2 = (2.0 * PI * (base_freq * 1.5) * t).sin() * 0.2;
-        let mut s = s1 + s2;
+        let mut s = 0.0;
+        
+        for &(freq, amp) in harmonics.iter() {
+            // 缓慢的振幅调制，增加灵动感
+            let modulation = (2.0 * PI * 0.2 * t).sin() * 0.2 + 0.8;
+            s += (2.0 * PI * freq * t).sin() * amp * modulation;
+        }
+        
+        // 简单的低通滤波效果（平滑处理）
         if s > 1.0 { s = 1.0; } else if s < -1.0 { s = -1.0; }
         let v = (s * 32767.0) as i16;
-        data.push(v); data.push(v); // 双声道
+        data.push(v); data.push(v);
     }
     data
 }
 
-/// 生成多种不同类型的碰撞音效，丰富听觉体验
+/// 生成清脆、不刺耳的多种碰撞音效
 fn generate_bounce_sounds() -> Vec<Vec<i16>> {
     let mut sounds = Vec::new();
-    let durations = [0.06, 0.08, 0.1, 0.07];
-    let base_freqs = [120.0, 150.0, 180.0, 220.0];
+    // 提高频率，避开嗡嗡声区域
+    let durations = [0.08, 0.1, 0.12];
+    let base_freqs = [220.0, 330.0, 440.0, 554.0]; // 使用音阶中的音符频率
     
     for &duration in durations.iter() {
         for &base_freq in base_freqs.iter() {
@@ -198,14 +206,19 @@ fn generate_bounce_sounds() -> Vec<Vec<i16>> {
             for j in 0..samples {
                 let t = j as f64 / SAMPLE_RATE as f64;
                 let p = t / duration;
-                // 频率随时间略微下降，模拟物理碰撞的能量损失
-                let freq = base_freq * (1.0 - p * 0.4);
-                // 使用正弦波并配合指数衰减包络
-                let mut s = (2.0 * PI * freq * t).sin() * 0.8 * (-p * 12.0).exp();
-                // 限制振幅防止爆音
+                
+                // 频率快速下降（敲击感）
+                let freq = base_freq * (1.0 - p * 0.5);
+                // 使用正弦波 + 少量二次谐波（更清脆）
+                let s1 = (2.0 * PI * freq * t).sin() * 0.7;
+                let s2 = (2.0 * PI * freq * 2.0 * t).sin() * 0.2;
+                
+                // 快速衰减的指数包络
+                let mut s = (s1 + s2) * (-p * 10.0).exp();
+                
                 if s > 1.0 { s = 1.0; } else if s < -1.0 { s = -1.0; }
                 let v = (s * 32767.0) as i16;
-                sound_data.push(v); sound_data.push(v); // 双声道
+                sound_data.push(v); sound_data.push(v);
             }
             sounds.push(sound_data);
         }
@@ -227,7 +240,7 @@ fn main() {
 
     let mut canvas = window.into_canvas().present_vsync().build().expect("Canvas Failed");
     canvas.set_blend_mode(BlendMode::Blend);
-    let mut event_pump = sdl_context.event_pump().expect("Events Failed");
+    let event_pump = sdl_context.event_pump().expect("Events Failed");
 
     let font = Font::try_from_bytes(FONT_DATA).expect("Font Load Failed");
     let mut user_config = UserConfig::load();
@@ -257,7 +270,7 @@ fn run_game(
     mut canvas: sdl2::render::Canvas<sdl2::video::Window>, 
     mut event_pump: sdl2::EventPump, 
     font: Font<'static>, 
-    mut user_config: UserConfig, 
+    user_config: UserConfig, 
     sink: Sink,
     stream_handle: OutputStreamHandle
 ) {
@@ -646,22 +659,7 @@ fn run_game_no_audio(
         }
 
         // --- Render ---
-        let t_size = 80.0;
-        let cols = (curr_w as f64 / t_size).round().max(1.0) as u32;
-        let rows = (curr_h as f64 / t_size).round().max(1.0) as u32;
-        let col_d = Color::RGB(0, 31, 86);
-        let col_l = Color::RGB(0, 48, 130);
-        
-        for r in 0..rows {
-            for c in 0..cols {
-                let x = (c * curr_w) / cols;
-                let y = (r * curr_h) / rows;
-                let nx = ((c + 1) * curr_w) / cols;
-                let ny = ((r + 1) * curr_h) / rows;
-                canvas.set_draw_color(if (c + r) % 2 == 0 { col_d } else { col_l });
-                let _ = canvas.fill_rect(Rect::new(x as i32, y as i32, nx - x, ny - y));
-            }
-        }
+        draw_background(&mut canvas, curr_w, curr_h);
 
         let is_fs = match canvas.window().fullscreen_state() { FullscreenType::Off => false, _ => true };
         draw_window_controls(&mut canvas, mouse_pos, is_fs, curr_w as i32);
@@ -711,6 +709,26 @@ fn run_game_no_audio(
 }
 
 // --- 渲染辅助函数 ---
+
+/// 绘制棋盘格背景
+fn draw_background<T: sdl2::render::RenderTarget>(canvas: &mut sdl2::render::Canvas<T>, width: u32, height: u32) {
+    let t_size = 80.0;
+    let cols = (width as f64 / t_size).round().max(1.0) as u32;
+    let rows = (height as f64 / t_size).round().max(1.0) as u32;
+    let col_d = Color::RGB(0, 31, 86);
+    let col_l = Color::RGB(0, 48, 130);
+    
+    for r in 0..rows {
+        for c in 0..cols {
+            let x = (c * width) / cols;
+            let y = (r * height) / rows;
+            let nx = ((c + 1) * width) / cols;
+            let ny = ((r + 1) * height) / rows;
+            canvas.set_draw_color(if (c + r) % 2 == 0 { col_d } else { col_l });
+            let _ = canvas.fill_rect(Rect::new(x as i32, y as i32, nx - x, ny - y));
+        }
+    }
+}
 
 fn draw_text_left<T: sdl2::render::RenderTarget>(
     canvas: &mut sdl2::render::Canvas<T>,
@@ -791,19 +809,54 @@ fn draw_text<T: sdl2::render::RenderTarget>(
     }
 }
 
-/// 绘制具有样式效果的小球（外发光效果）
-fn draw_ball_styled<T: sdl2::render::RenderTarget>(canvas: &mut sdl2::render::Canvas<T>, x: i32, y: i32, radius: f64) {
-    let r_i = radius as i32;
-    // 绘制外发光效果
-    for i in 0..5 {
-        let alpha = 40 - i * 8;
-        canvas.set_draw_color(Color::RGBA(255, 255, 255, alpha as u8));
-        let grow = i * 2;
-        let _ = canvas.fill_rect(Rect::new(x - r_i - grow, y - r_i - grow, (r_i * 2 + grow * 2) as u32, (r_i * 2 + grow * 2) as u32));
+/// 绘制具有样式效果的小球（带渐变和抗锯齿的圆形）
+fn draw_ball_styled<T: sdl2::render::RenderTarget>(
+    canvas: &mut sdl2::render::Canvas<T>,
+    cx: i32,
+    cy: i32,
+    radius: f64,
+) {
+    let r = radius as i32;
+    
+    // 线性渐变颜色
+    let color_top_left = (0x10, 0xB4, 0xC3);    // #10B4C3
+    let color_bottom_right = (0x11, 0xC5, 0x8C); // #11C58C
+    let outline_color = Color::RGB(0x46, 0xE2, 0xD5); // #46E2D5
+    
+    for dy in -r..=r {
+        for dx in -r..=r {
+            let dist_sq = (dx * dx + dy * dy) as f64;
+            let r_sq = radius * radius;
+            
+            if dist_sq <= r_sq {
+                let dist = dist_sq.sqrt();
+                
+                // 边缘抗锯齿
+                let mut alpha = 255u8;
+                if dist > radius - 1.0 {
+                    alpha = ((radius - dist) * 255.0) as u8;
+                }
+
+                if dist >= radius - 2.0 {
+                    // 描边效果
+                    let c = outline_color;
+                    canvas.set_draw_color(Color::RGBA(c.r, c.g, c.b, alpha));
+                    let _ = canvas.draw_point(Point::new(cx + dx, cy + dy));
+                } else {
+                    // 内部渐变填充
+                    let gradient_ratio = ((dx + r) as f64 + (dy + r) as f64) / (r as f64 * 4.0);
+                    let gradient_ratio = gradient_ratio.max(0.0).min(1.0);
+                    
+                    let r_val = (color_top_left.0 as f64 + (color_bottom_right.0 as f64 - color_top_left.0 as f64) * gradient_ratio) as u8;
+                    let g_val = (color_top_left.1 as f64 + (color_bottom_right.1 as f64 - color_top_left.1 as f64) * gradient_ratio) as u8;
+                    let b_val = (color_top_left.2 as f64 + (color_bottom_right.2 as f64 - color_top_left.2 as f64) * gradient_ratio) as u8;
+                    
+                    canvas.set_draw_color(Color::RGBA(r_val, g_val, b_val, alpha));
+                    let _ = canvas.draw_point(Point::new(cx + dx, cy + dy));
+                }
+            }
+        }
     }
-    // 绘制核心小球
-    canvas.set_draw_color(Color::RGB(255, 255, 255));
-    let _ = canvas.fill_rect(Rect::new(x - r_i, y - r_i, (r_i * 2) as u32, (r_i * 2) as u32));
 }
 
 fn draw_window_controls(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, mouse_pos: (i32, i32), is_fs: bool, win_w: i32) {
