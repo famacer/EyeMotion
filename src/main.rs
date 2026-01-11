@@ -806,21 +806,6 @@ fn draw_ball_styled<T: sdl2::render::RenderTarget>(canvas: &mut sdl2::render::Ca
     let _ = canvas.fill_rect(Rect::new(x - r_i, y - r_i, (r_i * 2) as u32, (r_i * 2) as u32));
 }
 
-/// 绘制背景（带渐变效果）
-fn draw_background<T: sdl2::render::RenderTarget>(canvas: &mut sdl2::render::Canvas<T>, w: u32, h: u32) {
-    canvas.set_draw_color(Color::RGB(10, 10, 15));
-    canvas.clear();
-    // 绘制简单的网格或渐变感
-    canvas.set_draw_color(Color::RGBA(255, 255, 255, 10));
-    for i in (0..w).step_by(100) {
-        let _ = canvas.draw_line((i as i32, 0), (i as i32, h as i32));
-    }
-    for i in (0..h).step_by(100) {
-        let _ = canvas.draw_line((0, i as i32), (w as i32, i as i32));
-    }
-}
-
-/// 绘制窗口控制按钮（最小化、最大化、关闭）
 fn draw_window_controls(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, mouse_pos: (i32, i32), is_fs: bool, win_w: i32) {
     let right = win_w;
     let c_min = Color::RGB(0x40, 0xC5, 0xEF);
@@ -859,29 +844,4 @@ fn draw_window_controls(canvas: &mut sdl2::render::Canvas<sdl2::video::Window>, 
             _ => {}
         }
     }
-}
-
-/// 游戏主入口
-fn main() -> Result<(), String> {
-    // 设置窗口在显示器中央
-    std::env::set_var("SDL_VIDEO_CENTERED", "1");
-    
-    let sdl_context = sdl2::init()?;
-    let video_subsystem = sdl_context.video()?;
-    
-    // 创建窗口
-    let window = video_subsystem.window("EyeMotion - Eye Tracking Training", DEFAULT_SIZE.0, DEFAULT_SIZE.1)
-        .position_centered()
-        .resizable()
-        .build()
-        .map_err(|e| e.to_string())?;
-
-    let mut canvas = window.into_canvas().present_vsync().build().map_err(|e| e.to_string())?;
-    canvas.set_blend_mode(BlendMode::Blend);
-
-    let ttf_context = sdl2::ttf::init().map_err(|e| e.to_string())?;
-    let texture_creator = canvas.texture_creator();
-
-    // 运行游戏主循环
-    run_game(&sdl_context, &mut canvas, &ttf_context, &texture_creator)
 }
