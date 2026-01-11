@@ -1,0 +1,23 @@
+{
+  "name": "eyemotion",
+  "version": "1.0.0",
+  "description": "EyeMotion - Multi-platform visual tracking training",
+  "scripts": {
+    "build": "cargo tauri build",
+    "build:windows": "cargo tauri build --target x86_64-pc-windows-msvc",
+    "build:macos": "cargo tauri build --target universal-apple-darwin",
+    "build:linux": "cargo tauri build --target x86_64-unknown-linux-gnu",
+    "build:android": "cargo tauri android build",
+    "build:ios": "cargo tauri ios build",
+    "dev": "cargo tauri dev",
+    "copy:all": "npm run copy:all"
+    "copy:windows": "xcopy /E /I /Y src-tauri/target/release/bundle/windows/x86_64-pc-windows-msvc \"dist\\windows\" /Y /I",
+    "copy:macos": "xcopy /E /I /Y src-tauri/target/release/bundle/universal-apple-darwin \"dist\\macos\"",
+    "copy:linux": "xcopy /E /I /Y src-tauri/target/release/bundle/x86_64-unknown-linux-gnu \"dist\\linux\"",
+    "copy:android": "xcopy /E /I /Y src-tauri/target/android/bundle/aarch64/ \"dist\\android\"",
+    "copy:ios": "xcopy /E /I /Y src-tauri/target/ios/bundle/ios/* \"dist\\ios\""
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^1.0.0"
+  }
+}
