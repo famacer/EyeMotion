@@ -1,30 +1,15 @@
-[package]
-name = "eyemotion"
+[workspace]
+members = ["eyemotion-core", "src-tauri"]
+resolver = "2"
+
+[workspace.package]
 version = "1.0.0"
 edition = "2021"
+authors = ["EyeMotion Team"]
 
-[dependencies]
-# SDL2 核心库 (静态链接)
-sdl2 = { version = "0.35", features = ["static-link", "bundled"] }
-
-# 音频处理
-rodio = "0.17"
-minimp3 = "0.5"
-
-# 随机数生成
-rand = "0.8"
-
-# 字体渲染
-rusttype = "0.9"
-
-# 数据持久化
+[workspace.dependencies]
 serde = { version = "1.0", features = ["derive"] }
-toml = "0.8"
-
-# 使用根目录的 main.rs 作为二进制入口
-[[bin]]
-name = "eyemotion"
-path = "src/main.rs"
-
-[build-dependencies]
-embed-resource = "2.4"
+serde_json = "1.0"
+rand = "0.8"
+thiserror = "1.0"
+log = "0.4"

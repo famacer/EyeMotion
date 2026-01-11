@@ -4,6 +4,11 @@ dist/
 *.exe
 *.pdb
 *.user
+*.app
+*.apk
+*.ipa
+*.dmg
 .vscode/
 .idea/
 *.log
+

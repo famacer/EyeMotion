@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EyeMotion</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <!-- 加载遮罩 -->
+    <div id="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p data-i18n="loading">Loading...</p>
+    </div>
+    
+    <!-- 虚拟控制按钮 -->
+    <div id="virtual-controls"></div>
+    
+    <!-- 语言菜单 -->
+    <div id="language-menu"></div>
+    
+    <!-- 脚本 -->
+    <script src="js/i18n.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/input.js"></script>
+    <script src="js/renderer.js"></script>
+    <script src="js/virtual-controls.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>

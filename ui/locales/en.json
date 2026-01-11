@@ -1,0 +1,22 @@
+{
+  "title": "EYE MOTION",
+  "start_button": "START",
+  "press_space": "PRESS SPACE TO START",
+  "time": "TIME",
+  "paused": "PAUSED",
+  "game_over": "GAME OVER",
+  "restart": "PRESS 'R' TO RESTART",
+  "restart_button": "RESTART",
+  "pause_button": "PAUSE",
+  "resume_button": "RESUME",
+  "language": "Language",
+  "close": "Close",
+  "controls": {
+    "exit": "ESC:EXIT",
+    "space": "SPACE:START&PAUSE",
+    "music": "P:MUSIC",
+    "on": "ON",
+    "off": "OFF"
+  },
+  "loading": "Loading..."
+}

@@ -1,0 +1,22 @@
+{
+  "title": "眼部运动训练",
+  "start_button": "开始训练",
+  "press_space": "按空格键开始",
+  "time": "时间",
+  "paused": "已暂停",
+  "game_over": "训练结束",
+  "restart": "按 'R' 键重新开始",
+  "restart_button": "重新开始",
+  "pause_button": "暂停",
+  "resume_button": "继续",
+  "language": "语言",
+  "close": "关闭",
+  "controls": {
+    "exit": "ESC:退出",
+    "space": "空格:开始&暂停",
+    "music": "P:音乐",
+    "on": "开",
+    "off": "关"
+  },
+  "loading": "加载中..."
+}

@@ -36,6 +36,12 @@ EyeMotion 是一款专为眼部健康设计的动态视觉追踪训练程序。�
 - **操作系统**：Windows 10/11
 - **推荐分辨率**：1600x900 或更高
 
+### 🛡️ 安全提示 (Windows SmartScreen)
+由于程序未进行昂贵的数字签名，下载运行后可能会弹出 Windows Defender SmartScreen 警告：
+1. 点击 **“更多信息”**。
+2. 点击 **“仍要运行”** 即可正常启动。
+*本程序完全开源，不包含任何恶意代码，请放心使用。*
+
 ---
 
 <a name="english"></a>
@@ -69,6 +75,12 @@ EyeMotion is a dynamic visual tracking training program designed for eye health.
 ### 💻 System Requirements
 - **OS**: Windows 10/11
 - **Recommended Resolution**: 1600x900 or higher
+
+### 🛡️ Security Note (Windows SmartScreen)
+As this is an unsigned open-source project, Windows SmartScreen may show a warning:
+1. Click **"More info"**.
+2. Click **"Run anyway"** to start the program.
+*This project is fully open-source and contains no malicious code.*
 
 ---
 © 2026 EyeMotion. All rights reserved.
