@@ -1,0 +1,30 @@
+[package]
+name = "eyemotion"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# SDL2 核心库 (静态链接)
+sdl2 = { version = "0.35", features = ["static-link", "use-vcpkg"] }
+
+# 音频处理
+rodio = "0.17"
+minimp3 = "0.5"
+
+# 随机数生成
+rand = "0.8"
+
+# 字体渲染
+rusttype = "0.9"
+
+# 数据持久化
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"
+
+# 使用根目录的 main.rs 作为二进制入口
+[[bin]]
+name = "eyemotion"
+path = "src/main.rs"
+
+[build-dependencies]
+embed-resource = "2.4"

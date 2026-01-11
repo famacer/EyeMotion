@@ -1,0 +1,9 @@
+target/
+vcpkg/
+dist/
+*.exe
+*.pdb
+*.user
+.vscode/
+.idea/
+*.log
