@@ -2,32 +2,46 @@ class Renderer {
     constructor(canvasId) {
         this.canvas = document.getElementById(canvasId);
         this.ctx = this.canvas.getContext('2d');
-        this.theme = null;
+        this.theme = this.getDefaultTheme();
+        this.ready = true;
+    }
+
+    getDefaultTheme() {
+        return {
+            background: {
+                grid_color_dark: { r: 0, g: 31, b: 86 },
+                grid_color_light: { r: 0, g: 48, b: 130 },
+                grid_size: 80.0
+            },
+            ball: {
+                gradient_start: { r: 16, g: 180, b: 195 },
+                gradient_end: { r: 17, g: 197, b: 140 },
+                outline_color: { r: 70, g: 226, b: 213 },
+                radius_ratio: 1.0 / 40.0
+            },
+            ui: {
+                title_color: { r: 255, g: 215, b: 0 },
+                subtitle_color: { r: 255, g: 105, b: 120 },
+                stats_color: { r: 135, g: 206, b: 235 }
+            }
+        };
     }
 
     async loadTheme() {
+        this.ready = false;
+        
         if (window.__TAURI__) {
-            this.theme = await window.__TAURI__.core.invoke('get_theme');
-        } else {
-            this.theme = {
-                background: {
-                    grid_color_dark: { r: 0, g: 31, b: 86 },
-                    grid_color_light: { r: 0, g: 48, b: 130 },
-                    grid_size: 80.0
-                },
-                ball: {
-                    gradient_start: { r: 16, g: 180, b: 195 },
-                    gradient_end: { r: 17, g: 197, b: 140 },
-                    outline_color: { r: 70, g: 226, b: 213 },
-                    radius_ratio: 1.0 / 40.0
-                },
-                ui: {
-                    title_color: { r: 255, g: 215, b: 0 },
-                    subtitle_color: { r: 255, g: 105, b: 120 },
-                    stats_color: { r: 135, g: 206, b: 235 }
-                }
-            };
+            try {
+                console.log('Renderer: Loading theme from backend...');
+                this.theme = await window.__TAURI__.core.invoke('get_theme');
+                console.log('Renderer: Theme loaded');
+            } catch (e) {
+                console.error('Renderer: Failed to load theme, using default', e);
+                this.theme = this.getDefaultTheme();
+            }
         }
+        
+        this.ready = true;
     }
 
     resize() {
@@ -42,7 +56,7 @@ class Renderer {
 
         for (let r = 0; r < rows; r++) {
             for (let c = 0; c < cols; c++) {
-                const c = (r + c) % 2 === 0 
+                const color = (r + c) % 2 === 0 
                     ? this.hexToRgba(grid_color_dark)
                     : this.hexToRgba(grid_color_light);
                 this.ctx.fillStyle = color;
@@ -52,6 +66,8 @@ class Renderer {
     }
 
     drawBall(ball) {
+        if (!ball) return;
+        
         const { pos, radius } = ball;
         const [x, y] = pos;
         
@@ -83,6 +99,10 @@ class Renderer {
     }
 
     render(gameState) {
+        if (!this.ready) {
+            return;
+        }
+        
         this.resize();
         this.drawBackground();
 
@@ -102,6 +122,8 @@ class Renderer {
     }
 
     drawUI(gameState) {
+        if (!gameState) return;
+        
         if (gameState.is_start_screen) {
             const sizeTitle = this.canvas.width / 8;
             const sizeStart = this.canvas.width / 20;

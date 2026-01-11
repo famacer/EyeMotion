@@ -9,30 +9,41 @@ class Game {
         this.gameState = null;
         this.lastTime = 0;
         this.isProcessing = false;
+        this.tickCount = 0;
+        this.firstTick = true;
+        this.tickTimeout = null;
         
         this.init();
     }
     
     async init() {
-        await this.renderer.loadTheme();
+        console.log('Game: Initializing...');
+        
         this.setupEventListeners();
+        createLanguageMenu();
+        
+        this.renderer.loadTheme();
         
         if (window.__TAURI__) {
-            const savedLang = await window.__TAURI__.core.invoke('get_language');
-            if (savedLang) {
-                await setLocale(savedLang);
+            try {
+                const savedLang = await window.__TAURI__.core.invoke('get_language');
+                if (savedLang) {
+                    setLocale(savedLang);
+                }
+            } catch (e) {
+                console.warn('Game: Failed to load saved language', e);
             }
         }
-        
-        createLanguageMenu();
         
         requestAnimationFrame((t) => this.gameLoop(t));
         
         window.game = this;
+        console.log('Game: Initialization complete');
     }
     
     setupEventListeners() {
         this.input.on('keydown', (key) => {
+            console.log('Game: Keydown', key);
             if (key === 'Space') {
                 if (this.gameState?.is_start_screen) {
                     this.startGame();
@@ -68,18 +79,30 @@ class Game {
             
             try {
                 if (window.__TAURI__) {
-                    const [state, events] = await window.__TAURI__.core.invoke('tick', { dt });
+                    const [state, events] = await this.safeInvoke('tick', { dt });
                     
-                    this.gameState = state;
-                    window.gameState = state;
-                    
-                    for (const event of events) {
-                        this.handleEvent(event);
+                    if (state) {
+                        this.gameState = state;
+                        window.gameState = state;
+                        this.tickCount++;
+                        
+                        if (this.firstTick && this.tickCount >= 1) {
+                            this.firstTick = false;
+                            const loadingOverlay = document.getElementById('loading-overlay');
+                            if (loadingOverlay) {
+                                loadingOverlay.style.display = 'none';
+                                console.log('Game: Loading overlay hidden');
+                            }
+                        }
+                        
+                        for (const event of events) {
+                            this.handleEvent(event);
+                        }
+                        
+                        document.dispatchEvent(new CustomEvent('game-state-changed', { 
+                            detail: state 
+                        }));
                     }
-                    
-                    document.dispatchEvent(new CustomEvent('game-state-changed', { 
-                        detail: state 
-                    }));
                 }
             } catch (e) {
                 console.error("Game loop error:", e);
@@ -93,6 +116,33 @@ class Game {
         requestAnimationFrame((t) => this.gameLoop(t));
     }
     
+    async safeInvoke(command, params) {
+        const timeoutPromise = new Promise((_, reject) => {
+            this.tickTimeout = setTimeout(() => reject(new Error('Timeout')), 5000);
+        });
+        
+        try {
+            const result = await Promise.race([
+                window.__TAURI__.core.invoke(command, params),
+                timeoutPromise
+            ]);
+            
+            if (this.tickTimeout) {
+                clearTimeout(this.tickTimeout);
+                this.tickTimeout = null;
+            }
+            
+            return result;
+        } catch (e) {
+            if (this.tickTimeout) {
+                clearTimeout(this.tickTimeout);
+                this.tickTimeout = null;
+            }
+            console.error(`Game: ${command} failed:`, e);
+            return null;
+        }
+    }
+    
     handleEvent(event) {
         if (event === 'BallBounced') {
             this.audio.playBounce();
@@ -101,19 +151,19 @@ class Game {
     
     async startGame() {
         if (window.__TAURI__) {
-            await window.__TAURI__.core.invoke('start_game');
+            await this.safeInvoke('start_game', {});
         }
     }
     
     async togglePause() {
         if (window.__TAURI__) {
-            await window.__TAURI__.core.invoke('toggle_pause');
+            await this.safeInvoke('toggle_pause', {});
         }
     }
     
     async restart() {
         if (window.__TAURI__) {
-            await window.__TAURI__.core.invoke('reset_game', {
+            await this.safeInvoke('reset_game', {
                 w: window.innerWidth,
                 h: window.innerHeight
             });
@@ -128,6 +178,7 @@ class Game {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM Content Loaded');
     setTimeout(() => {
         new Game();
     }, 100);
