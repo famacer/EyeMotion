@@ -1,4 +1,5 @@
 #[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "type")]
 pub enum GameEvent {
     BallBounced,
     StageChanged { from: i32, to: i32 },

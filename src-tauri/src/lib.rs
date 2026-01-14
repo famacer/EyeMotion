@@ -16,16 +16,28 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             tick,
             reset_game,
+            resize_game,
             toggle_pause,
             start_game,
-            exit_app,
+            next_stage,
+                prev_stage,
+                exit_app,
+            minimize_window,
+            toggle_fullscreen,
+            show_main_window,
             get_theme,
             set_language,
-            get_language
+            get_language,
+            get_config
         ])
         .setup(|_app| {
             println!("Tauri setup started");
             Ok(())
+        })
+        .on_window_event(|_window, event| {
+            if let tauri::WindowEvent::CloseRequested { .. } = event {
+                std::process::exit(0);
+            }
         })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

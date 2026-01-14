@@ -3,7 +3,7 @@ members = ["eyemotion-core", "src-tauri"]
 resolver = "2"
 
 [workspace.package]
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 authors = ["EyeMotion Team"]
 
@@ -13,3 +13,10 @@ serde_json = "1.0"
 rand = "0.8"
 thiserror = "1.0"
 log = "0.4"
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+opt-level = "s" # 优先优化体积 (size)，也可以用 3 优先性能

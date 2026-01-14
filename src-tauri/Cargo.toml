@@ -14,3 +14,4 @@ log.workspace = true
 tauri = { version = "2", features = [] }
 tauri-plugin-log = "2"
 tauri-plugin-shell = "2"
+tauri-plugin-window-state = "2"

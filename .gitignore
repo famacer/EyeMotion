@@ -1,6 +1,19 @@
-target/
-vcpkg/
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Build & Dependencies
+node_modules/
 dist/
+target/
+src-tauri/target/
+src-tauri/gen/schemas
+vcpkg/
+
+# Compiled files
 *.exe
 *.pdb
 *.user
@@ -8,7 +21,39 @@ dist/
 *.apk
 *.ipa
 *.dmg
-.vscode/
-.idea/
-*.log
+*.msi
+*.msix
+*.deb
+*.rpm
 
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env*
+! .env.example
+
+# OS specific
+Thumbs.db
+desktop.ini
+
+# Rust specific
+Cargo.lock.backup
+**/*.rs.bk
+
+# Local tools
+.agent/
+.claude/
+.codex/
+.cursor/
+.gemini/
+.kiro/
+.roo/
+.shared/
+.trae/
+.windsurf/
+AGENTS.md
+nul

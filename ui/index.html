@@ -5,21 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>EyeMotion</title>
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        /* 立即显示蓝色背景，防止白屏 */
+        html, body {
+            background-color: #011368 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            /* 强制预加载字体 */
+            font-family: 'AlumniSans', sans-serif;
+            font-weight: normal;
+        }
+        canvas {
+            background-color: transparent !important;
+        }
+        #loading-overlay {
+            background-color: #011368 !important;
+            z-index: 9999;
+        }
+    </style>
+    <script>
+        // 立即设置背景色
+        document.documentElement.style.backgroundColor = '#011368';
+        document.body.style.backgroundColor = '#011368';
+    </script>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
     
     <!-- Window Controls -->
-    <div id="window-controls">
+    <div id="window-controls" style="z-index:1000;">
         <div class="win-btn btn-close" id="ctrl-close"></div>
         <div class="win-btn btn-min" id="ctrl-min"></div>
         <div class="win-btn btn-max" id="ctrl-max"></div>
-    </div>
-    
-    <!-- Loading Overlay -->
-    <div id="loading-overlay">
-        <div class="loading-spinner"></div>
-        <p data-i18n="loading">Loading...</p>
     </div>
     
     <!-- Virtual Controls -->
@@ -28,36 +46,7 @@
     <!-- Language Menu -->
     <div id="language-menu"></div>
     
-    <!-- All Scripts -->
-    <script>
-        console.log('=== SCRIPT LOADING STARTED ===');
-        
-        function initGame() {
-            console.log('Initializing game...');
-            
-            if (typeof Game === 'undefined') {
-                console.error('Game class not found! Waiting...');
-                setTimeout(initGame, 500);
-                return;
-            }
-            
-            console.log('Game class found, creating instance');
-            window.game = new Game();
-        }
-        
-        window.addEventListener('DOMContentLoaded', initGame);
-        window.addEventListener('load', initGame);
-    </script>
-    
-    <script src="js/i18n.js"></script>
-    <script src="js/audio.js"></script>
-    <script src="js/input.js"></script>
-    <script src="js/renderer.js"></script>
-    <script src="js/virtual-controls.js"></script>
-    <script src="js/game.js"></script>
-    
-    <script>
-        initGame();
-    </script>
+    <!-- Main Entry -->
+    <script type="module" src="/js/game.ts"></script>
 </body>
 </html>
