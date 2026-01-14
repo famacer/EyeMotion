@@ -14,7 +14,7 @@
 - **Progressive Difficulty**: Gradually increases visual reaction speed from basic to challenge modes.
 - **High Refresh Rate Support**: Optimized for 240Hz-540Hz displays with a smooth rendering engine.
 - **Immersive Experience**: Features dynamic background music and real-time collision sound effects.
-- **Minimalist Interaction**: Supports full-screen switching and one-key restart to focus on training.
+- **Minimalist Interaction**: Supports full-screen switching and one-click restart to focus on training.
 
 ## 🎮 Controls & Interaction
 EyeMotion is designed for minimalist interaction using only your mouse.

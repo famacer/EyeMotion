@@ -29,6 +29,7 @@ All notable changes to this project will be documented in this file.
 - **High-FPS Support**: Engine verified and optimized for **240Hz - 540Hz** eSports monitors.
 
 ### 🎮 Gameplay Balancing
+- **Mouse-Only Control**: Completely removed keyboard dependencies. All interactions (Start, Pause, Restart, Quit) are now handled via intuitive mouse clicks.
 - **Stage 2 Evolution**: Replaced "Pure Vertical" motion with "Near Vertical" (random 5-15° deviation) to prevent user adaptation and improve training efficacy.
 - **Stage 3 Tuning**: Vertical speed is now strictly locked to **0.7x** of horizontal speed.
 - **Global Pacing**: Adjusted global speed multipliers for Stage 2 and Stage 4 to optimize the difficulty curve.
