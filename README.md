@@ -16,11 +16,12 @@
 - **Immersive Experience**: Features dynamic background music and real-time collision sound effects.
 - **Minimalist Interaction**: Supports full-screen switching and one-key restart to focus on training.
 
-## 🎮 Controls
-- **SPACE**: Start Training / Pause / Resume
-- **P**: Toggle Background Music
-- **R**: Restart after training ends
-- **ESC**: Exit Program
+## 🎮 Controls & Interaction
+EyeMotion is designed for minimalist interaction using only your mouse.
+
+- **Start**: Click the **START** button on the main screen.
+- **Pause/Resume**: Click anywhere on the screen during training to pause; click again to resume.
+- **Game Over**: When training ends, click **RESTART** to try again or **QUIT** to exit.
 - **Window Controls** (Top-Right):
   - 🔵 Minimize | 🟡 Toggle Fullscreen | 🔴 Close
 
