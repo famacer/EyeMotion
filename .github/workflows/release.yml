@@ -82,5 +82,5 @@ jobs:
           releaseName: 'EyeMotion ${{ github.ref_name }}'
           releaseBody: ${{ env.RELEASE_BODY }}
           releaseDraft: false
-          releasePrerelease: false
-          args: ${{ matrix.platform == 'ubuntu-22.04' && '-- --bundles deb,appimage' || '' }}
+          prerelease: false
+          args: ${{ matrix.platform == 'ubuntu-22.04' && '--bundles deb,appimage' || '' }}
