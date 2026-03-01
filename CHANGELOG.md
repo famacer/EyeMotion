@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.2] - 2026-03-01 "The Omni-Platform Update"
+
+> **Summary**: This release brings full Android support to the CI/CD pipeline, ensuring that every release now automatically includes Windows, Linux, and Android builds.
+
+### 🚀 CI/CD Pipeline
+- **Android Automation**: Added a dedicated `release-android` job to GitHub Actions. Now, every tagged release will automatically build and upload an Android APK (`eyemotion-android`).
+- **Linux Integration**: Merged Linux build steps (`deb`, `AppImage`) into the main release workflow.
+- **Workflow Optimization**: Fixed parameter issues in `tauri-action` to ensure reliable cross-platform builds.
+
+### 📱 Platform Support
+- **Android**: Full automated build support. Note: APKs are currently unsigned/debug builds in CI; production signing requires manual keystore configuration.
+- **Linux**: AppImage and Deb packages are now standard release artifacts.
+
+---
+
+## [1.1.1] - 2026-03-01
+- Added automated Linux builds (AppImage/Deb) to GitHub Releases.
+- Updated application icons.
+
+---
+
 ## [1.1.0] - 2026-01-15 "The Architect Update"
 
 > **Summary**: This release marks a complete architectural overhaul of the EyeMotion project, transitioning from a prototype to a production-grade application. The entire codebase has been refactored to separate concerns, improve stability, and enable cross-platform scalability.
