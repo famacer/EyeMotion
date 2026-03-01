@@ -40,7 +40,7 @@ jobs:
         run: npm install
 
       - name: Build App (Linux)
-        run: npm run tauri build
+        run: npm run tauri build -- --bundles deb,appimage
         env:
           # If you have signing keys, add them to secrets
           # TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}

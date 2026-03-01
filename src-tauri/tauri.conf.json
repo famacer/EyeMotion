@@ -42,7 +42,9 @@
       }
     },
     "linux": {
-      "targets": ["deb", "appimage"]
+      "deb": {
+        "files": {}
+      }
     },
     "macOS": {
       "minimumSystemVersion": "10.15"
