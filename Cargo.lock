@@ -795,7 +795,7 @@ dependencies = [
 
 [[package]]
 name = "eyemotion"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "eyemotion-core",
  "log",
@@ -810,7 +810,7 @@ dependencies = [
 
 [[package]]
 name = "eyemotion-core"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "log",
  "rand 0.8.5",

@@ -1,5 +1,4 @@
 export class InputHandler {
-    private keys: Set<string> = new Set();
     private listeners: Map<string, Array<(data?: any) => void>> = new Map();
 
     constructor() {
@@ -21,16 +20,45 @@ export class InputHandler {
             this.emit('mousemove', { x: e.clientX, y: e.clientY });
         });
 
+        // Touch handling
+        let touchStartPos: { x: number, y: number } | null = null;
+        let touchStartTime: number = 0;
+
         window.addEventListener('touchstart', (e) => {
             if (e.touches.length > 0) {
                 const touch = e.touches[0];
+                touchStartPos = { x: touch.clientX, y: touch.clientY };
+                touchStartTime = Date.now();
                 this.emit('mousedown', { x: touch.clientX, y: touch.clientY });
-                this.emit('click', { x: touch.clientX, y: touch.clientY });
             }
-        }, { passive: true });
+        }, { passive: false });
 
-        window.addEventListener('touchend', () => {
+        window.addEventListener('touchmove', (e) => {
+            if (e.touches.length > 0) {
+                const touch = e.touches[0];
+                this.emit('mousemove', { x: touch.clientX, y: touch.clientY });
+            }
+        }, { passive: false });
+
+        window.addEventListener('touchend', (e) => {
             this.emit('mouseup');
+            
+            if (touchStartPos) {
+                const touch = e.changedTouches[0];
+                const dx = touch.clientX - touchStartPos.x;
+                const dy = touch.clientY - touchStartPos.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                const duration = Date.now() - touchStartTime;
+
+                // Relaxed threshold for mobile: 30px distance, 800ms duration
+                if (distance < 30 && duration < 800) {
+                    // Prevent default to avoid double-firing with mouse events
+                    if (e.cancelable) e.preventDefault();
+                    this.emit('click', { x: touch.clientX, y: touch.clientY });
+                }
+                
+                touchStartPos = null;
+            }
         });
 
         // Keyboard events for system/debug shortcuts

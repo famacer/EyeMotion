@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EyeMotion</title>
+    <style>
+        /* 立即显示蓝色背景，防止白屏 */
+        html, body {
+            background-color: #011368 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            /* 强制预加载字体 */
+            font-family: 'AlumniSans', sans-serif;
+            font-weight: normal;
+        }
+        canvas {
+            background-color: transparent !important;
+        }
+        #loading-overlay {
+            background-color: #011368 !important;
+            z-index: 9999;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 立即设置背景色
+            document.documentElement.style.backgroundColor = '#011368';
+            document.body.style.backgroundColor = '#011368';
+            
+            // 移动端适配检测
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (isMobile) {
+                document.documentElement.classList.add('mobile');
+                console.log('Mobile detected, adding .mobile class');
+            }
+        });
+    </script>
+    <style>
+        /* 移动端样式覆盖 */
+        .mobile #window-controls {
+            display: none !important;
+        }
+    </style>
+  <script type="module" crossorigin src="./assets/main-scR_YCL8.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/main-DxrCcIB1.css">
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    
+    <!-- Window Controls -->
+    <div id="window-controls" style="z-index:1000;">
+        <div class="win-btn btn-close" id="ctrl-close"></div>
+        <div class="win-btn btn-min" id="ctrl-min"></div>
+        <div class="win-btn btn-max" id="ctrl-max"></div>
+    </div>
+    
+    <!-- Virtual Controls -->
+    <div id="virtual-controls"></div>
+    
+    <!-- Language Menu -->
+    <div id="language-menu"></div>
+    
+    <!-- Main Entry -->
+</body>
+</html>

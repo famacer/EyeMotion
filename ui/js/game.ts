@@ -33,6 +33,22 @@ export class Game {
         
         this.setupEventListeners();
         window.addEventListener('resize', () => this.handleResize());
+        
+        // Handle visibility change (background/foreground)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                console.log('Game: App went to background');
+                this.audio.stopBGM(); // Or suspend
+                if (this.gameState && !this.gameState.paused && !this.gameState.is_start_screen && !this.gameState.is_game_over) {
+                    this.togglePause();
+                }
+            } else {
+                console.log('Game: App returned to foreground');
+                // Optional: Resume BGM if it was playing? 
+                // Better to leave it paused and let user resume via UI.
+            }
+        });
+
         createLanguageMenu();
         
         this.renderer.loadTheme();
@@ -46,8 +62,11 @@ export class Game {
         }
         
         try {
-            // 始终使用 1920x1080 逻辑分辨率初始化物理引擎
-            const state = await Bridge.resetGame(1920, 1080);
+            // 根据屏幕比例动态计算逻辑分辨率
+            const { w, h } = this.getLogicalSize();
+            this.renderer.setLogicalSize(w, h);
+            
+            const state = await Bridge.resetGame(w, h);
             this.gameState = state;
         } catch (e) {
             console.warn('Game: Failed to reset game:', e);
@@ -55,6 +74,12 @@ export class Game {
         
         requestAnimationFrame((t) => this.gameLoop(t));
         (window as any).game = this;
+    }
+
+    private getLogicalSize(): { w: number, h: number } {
+        const h = 1080;
+        const w = Math.round(h * (window.innerWidth / window.innerHeight));
+        return { w, h };
     }
     
     private setupEventListeners(): void {
@@ -203,14 +228,35 @@ export class Game {
     }
 
     public async quitGame(): Promise<void> {
-        await this.exit();
+        // 移动端：返回标题画面 (Start Screen)
+        // 桌面端：退出应用 (Exit App)
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isMobile) {
+            console.log('Game: Mobile quit -> Returning to Start Screen');
+            if (this.gameState) {
+                this.gameState.is_start_screen = true;
+                this.gameState.paused = false;
+                this.gameState.is_game_over = false;
+                this.audio.stopBGM();
+                
+                // CRITICAL FIX: Reset mouse down state to prevent immediate re-triggering of "Start" button
+                // if the touch/click position overlaps with the Start button on the next frame.
+                this.isMouseDown = false; 
+                
+                // 强制重绘一帧以更新 UI
+                this.renderer.render(this.gameState, this.mousePos, this.isMouseDown, true);
+            }
+        } else {
+            await this.exit();
+        }
     }
 
     public async restartGame(): Promise<void> {
         console.log('Game: Restarting...');
         try {
-            // 始终使用 1920x1080 逻辑分辨率重置物理引擎
-            const state = await Bridge.resetGame(1920, 1080);
+            // 使用当前逻辑分辨率重置物理引擎
+            const { w, h } = this.getLogicalSize();
+            const state = await Bridge.resetGame(w, h);
             if (state) {
                 this.gameState = state;
                 this.gameState.is_start_screen = false; // Ensure it's false
@@ -236,8 +282,9 @@ export class Game {
     private async handleResize(): Promise<void> {
         this.renderer.resize();
         try {
-            // 通知后端保持 1920x1080 逻辑分辨率，即使窗口大小改变
-            await Bridge.resizeGame(1920, 1080);
+            const { w, h } = this.getLogicalSize();
+            this.renderer.setLogicalSize(w, h);
+            await Bridge.resizeGame(w, h);
         } catch (e) {
             console.error('Game: Failed to resize game:', e);
         }

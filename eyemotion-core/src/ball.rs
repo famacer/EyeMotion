@@ -16,7 +16,8 @@ impl Ball {
         Ball {
             screen_w,
             screen_h,
-            radius: screen_w / 40.0,
+            // 基于高度计算半径，保持在不同宽高比下的视觉一致性 (1080 / 22.5 = 48)
+            radius: screen_h / 22.5,
             x: screen_w / 2.0,
             y: screen_h / 2.0,
             vx: 0.0,
@@ -71,7 +72,7 @@ impl Ball {
     }
 
     pub fn update_radius(&mut self) {
-        self.radius = self.screen_w / 40.0;
+        self.radius = self.screen_h / 22.5;
     }
 
     pub fn set_speed(&mut self, speed: f64, direction: Option<(f64, f64)>) {

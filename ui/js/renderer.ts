@@ -6,6 +6,9 @@ export class Renderer {
     private theme: Theme;
     private buttons: Map<string, { x: number, y: number, w: number, h: number, callback: () => void }> = new Map();
     private buttonHoverFactors: Map<string, number> = new Map();
+    private logicalWidth: number = 1920;
+    private logicalHeight: number = 1080;
+    private isMobile: boolean = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     constructor(canvasId: string) {
         const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
@@ -24,6 +27,11 @@ export class Renderer {
         this.theme = this.getDefaultTheme();
         this.resize();
         this.loadFonts();
+    }
+
+    public setLogicalSize(w: number, h: number): void {
+        this.logicalWidth = w;
+        this.logicalHeight = h;
     }
 
     public async loadTheme(): Promise<void> {
@@ -82,11 +90,25 @@ export class Renderer {
         return `rgb(${color.r}, ${color.g}, ${color.b})`;
     }
 
-    // 获取相对于 1920x1080 设计稿的比例
+    private t(key: string): string {
+        const translations: Record<string, string> = {
+            'stage': 'STAGE',
+            'time': 'TIME'
+        };
+        return translations[key] || key.toUpperCase();
+    }
+
+    private formatTime(seconds: number): string {
+        const m = Math.floor(seconds / 60);
+        const s = Math.floor(seconds % 60);
+        return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    // 获取相对于逻辑设计稿的比例
     private getScale(): number {
         const h = window.innerHeight;
         // 始终基于高度缩放，以确保纵向比例一致
-        return h / 1080;
+        return h / this.logicalHeight;
     }
 
     // 将设计稿坐标转换为实际屏幕坐标
@@ -95,9 +117,9 @@ export class Renderer {
         const w = window.innerWidth;
         const h = window.innerHeight;
         
-        // 计算 1920x1080 逻辑区域在实际屏幕上的偏移，使其完全居中
-        const offsetX = (w - 1920 * scale) / 2;
-        const offsetY = (h - 1080 * scale) / 2;
+        // 计算逻辑区域在实际屏幕上的偏移，使其完全居中
+        const offsetX = (w - this.logicalWidth * scale) / 2;
+        const offsetY = (h - this.logicalHeight * scale) / 2;
         
         return {
             x: x * scale + offsetX,
@@ -112,7 +134,9 @@ export class Renderer {
 
     private drawText(text: string, x: number, y: number, size: number, color: string | CanvasGradient, align: CanvasTextAlign = 'center', fontStack: string = "'AlumniSans', system-ui, sans-serif", opacity: number = 1): void {
         const pos = this.scalePos(x, y);
-        const finalSize = Math.round(this.scaleSize(size)); // 整数化字号，减少渲染模糊
+        // 移动端字体放大 1.3 倍
+        const mobileScale = this.isMobile ? 1.3 : 1.0;
+        const finalSize = Math.round(this.scaleSize(size) * mobileScale); 
         this.ctx.save();
         this.ctx.globalAlpha = opacity;
         
@@ -140,9 +164,10 @@ export class Renderer {
     }
 
     private drawButton(id: string, text: string, x: number, y: number, fontSize: number, paddingX: number, paddingY: number, gradientColors: string[], callback: () => void, mousePos?: { x: number, y: number }, isMouseDown?: boolean): void {
-        const finalFontSize = this.scaleSize(fontSize);
-        const finalPaddingX = this.scaleSize(paddingX);
-        const finalPaddingY = this.scaleSize(paddingY);
+        const mobileScale = this.isMobile ? 1.3 : 1.0;
+        const finalFontSize = this.scaleSize(fontSize) * mobileScale;
+        const finalPaddingX = this.scaleSize(paddingX) * mobileScale;
+        const finalPaddingY = this.scaleSize(paddingY) * mobileScale;
         
         this.ctx.font = `${finalFontSize}px 'AlumniSans'`;
         const textMetrics = this.ctx.measureText(text);
@@ -300,7 +325,7 @@ export class Renderer {
                 this.drawStage5Pause();
             }
             
-            this.drawUI(gameState);
+            this.drawUI(gameState, mousePos, isMouseDown);
         }
 
         // 重新检查鼠标是否在任何按钮上（此时 this.buttons 已经由 drawButton 填充完毕）
@@ -372,12 +397,12 @@ export class Renderer {
     }
 
     private drawStartScreen(mousePos?: { x: number, y: number }, isMouseDown?: boolean): void {
-        this.drawText('EYE MOTION', 1920 / 2, 400, 200, '#EBBF42'); 
+        this.drawText('EYE MOTION', this.logicalWidth / 2, 400, 200, '#EBBF42'); 
         
         this.drawButton(
             'start-btn', 
             'START', 
-            1920 / 2, 
+            this.logicalWidth / 2, 
             560, 
             64,  
             35,  
@@ -390,60 +415,222 @@ export class Renderer {
     }
 
     private drawGameOver(mousePos?: { x: number, y: number }, isMouseDown?: boolean): void {
-        // "GAME OVER" 字号翻倍：120 -> 240，位置微调
-        this.drawText("GAME OVER", 1920 / 2, 1080 / 2 - 250, 240, "#FC6170");
+        const centerX = this.logicalWidth / 2;
+        const centerY = this.logicalHeight / 2;
         
-        // RESTART 按钮，位置下移：150 -> 200
-        this.drawButton(
-            'restart-btn', 
-            'RESTART', 
-            1920 / 2, 
-            1080 / 2 + 200, 
-            64, 
-            35, 
-            16,
-            ['#EBBF42', '#E68325'],
-            () => (window as any).game.restartGame(),
-            mousePos,
-            isMouseDown
-        );
+        // "GAME OVER" 字号翻倍：120 -> 240，位置微调
+        this.drawText("GAME OVER", centerX, centerY - 250, 240, "#FC6170");
+        
+        if (this.isMobile) {
+            // Mobile: Horizontal Layout (横排)
+            // RESTART | QUIT
+            const btnGap = 200; // Gap between button centers
+            
+            this.drawButton(
+                'restart-btn', 
+                'RESTART', 
+                centerX - btnGap / 2, 
+                centerY + 200, 
+                64, 
+                35, 
+                16,
+                ['#EBBF42', '#E68325'],
+                () => (window as any).game.restartGame(),
+                mousePos,
+                isMouseDown
+            );
 
-        // QUIT 按钮，距离 RESTART 120px (相对)
-        this.drawButton(
-            'quit-btn', 
-            'QUIT', 
-            1920 / 2, 
-            1080 / 2 + 200 + 120, 
-            64, 
-            35, 
-            16,
-            ['#41C6F0', '#108FDF'],
-            () => (window as any).game.quitGame(),
-            mousePos,
-            isMouseDown
-        );
+            this.drawButton(
+                'quit-btn', 
+                'QUIT', 
+                centerX + btnGap / 2, 
+                centerY + 200, 
+                64, 
+                35, 
+                16,
+                ['#41C6F0', '#108FDF'],
+                () => (window as any).game.quitGame(),
+                mousePos,
+                isMouseDown
+            );
+        } else {
+            // Desktop: Vertical Layout (竖排)
+            // RESTART
+            // QUIT
+            
+            // RESTART 按钮，位置下移：150 -> 200
+            this.drawButton(
+                'restart-btn', 
+                'RESTART', 
+                centerX, 
+                centerY + 200, 
+                64, 
+                35, 
+                16,
+                ['#EBBF42', '#E68325'],
+                () => (window as any).game.restartGame(),
+                mousePos,
+                isMouseDown
+            );
+
+            // QUIT 按钮，距离增加到 140px (Game Over buttons too close)
+            this.drawButton(
+                'quit-btn', 
+                'QUIT', 
+                centerX, 
+                centerY + 200 + 140, 
+                64, 
+                35, 
+                16,
+                ['#41C6F0', '#108FDF'],
+                () => (window as any).game.quitGame(),
+                mousePos,
+                isMouseDown
+            );
+        }
     }
 
-    private drawUI(state: GameState): void {
+    private drawUI(state: GameState, mousePos?: { x: number, y: number }, isMouseDown?: boolean): void {
         this.drawStats(state);
         
+        // Pause Button (Top Center) - Only draw when playing and not transitioning
+        // 仅在移动端显示暂停按钮 (Mobile Only)
+        if (this.isMobile && !state.paused && !state.is_transitioning && !state.is_game_over) {
+            const topMargin = 60;
+            this.drawButton(
+                'game-pause-btn',
+                'II', // Pause Icon representation
+                this.logicalWidth / 2,
+                topMargin,
+                24,
+                20,
+                5,
+                ['#41C6F0', '#108FDF'],
+                () => (window as any).game.togglePause(),
+                mousePos,
+                isMouseDown
+            );
+        }
+        
         if (state.paused) {
-            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; // Darker background
             this.ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-            // 暂停提示移至画面上方 1/3 处
-            this.drawText('PAUSED', 1920 / 2, 1080 / 3, 100, '#EBBF42');
             
-            this.buttons.set('resume-area', { 
-                x: 0, y: 0, w: window.innerWidth, h: window.innerHeight, 
-                callback: () => (window as any).game.togglePause() 
-            });
+            // 暂停提示移至画面上方 1/4 处
+            this.drawText('PAUSED', this.logicalWidth / 2, this.logicalHeight * 0.25, 100, '#EBBF42');
+            
+            const centerX = this.logicalWidth / 2;
+            const centerY = this.logicalHeight / 2;
+
+            if (this.isMobile) {
+                // Mobile: Horizontal Layout (横排)
+                // RESUME | RESTART | QUIT
+                const btnGap = 200;
+                
+                // RESUME (Left)
+                this.drawButton(
+                    'pause-resume-btn',
+                    'RESUME',
+                    centerX - btnGap,
+                    centerY, // Centered vertically
+                    64,
+                    35,
+                    16,
+                    ['#41C6F0', '#108FDF'],
+                    () => (window as any).game.togglePause(),
+                    mousePos,
+                    isMouseDown
+                );
+
+                // RESTART (Center)
+                this.drawButton(
+                    'pause-restart-btn',
+                    'RESTART',
+                    centerX,
+                    centerY,
+                    64,
+                    35,
+                    16,
+                    ['#EBBF42', '#E68325'],
+                    () => (window as any).game.restartGame(),
+                    mousePos,
+                    isMouseDown
+                );
+
+                // QUIT (Right)
+                this.drawButton(
+                    'pause-quit-btn',
+                    'QUIT',
+                    centerX + btnGap,
+                    centerY,
+                    64,
+                    35,
+                    16,
+                    ['#FC6170', '#E62538'],
+                    () => (window as any).game.quitGame(),
+                    mousePos,
+                    isMouseDown
+                );
+
+            } else {
+                // Desktop: Vertical Layout (竖排)
+                const btnGap = 120; // Increased from 100 to 120 for better spacing
+
+                // RESUME Button
+                this.drawButton(
+                    'pause-resume-btn',
+                    'RESUME',
+                    centerX,
+                    centerY - 50,
+                    64,
+                    35,
+                    16,
+                    ['#41C6F0', '#108FDF'],
+                    () => (window as any).game.togglePause(),
+                    mousePos,
+                    isMouseDown
+                );
+
+                // RESTART Button
+                this.drawButton(
+                    'pause-restart-btn',
+                    'RESTART',
+                    centerX,
+                    centerY - 50 + btnGap,
+                    64,
+                    35,
+                    16,
+                    ['#EBBF42', '#E68325'],
+                    () => (window as any).game.restartGame(),
+                    mousePos,
+                    isMouseDown
+                );
+
+                // QUIT Button
+                this.drawButton(
+                    'pause-quit-btn',
+                    'QUIT',
+                    centerX,
+                    centerY - 50 + btnGap * 2,
+                    64,
+                    35,
+                    16,
+                    ['#FC6170', '#E62538'],
+                    () => (window as any).game.quitGame(),
+                    mousePos,
+                    isMouseDown
+                );
+            }
+            
+            // Remove full screen resume area to avoid conflict with buttons
+            // Users should click "RESUME" button explicitly, which is clearer
         }
 
         if (state.is_transitioning) {
             const count = Math.ceil(state.transition_timer);
             // "STAGE *" 渐变色处理
             const stageText = `STAGE ${state.stage}`;
-            const pos = this.scalePos(1920 / 2, 520);
+            const pos = this.scalePos(this.logicalWidth / 2, 520);
             const size = 140;
             const finalSize = Math.round(this.scaleSize(size));
             
@@ -455,31 +642,39 @@ export class Renderer {
             gradient.addColorStop(0, '#41C6F0');
             gradient.addColorStop(1, '#108FDF');
             
-            this.drawText(stageText, 1920 / 2, 520, size, gradient);
+            this.drawText(stageText, this.logicalWidth / 2, 520, size, gradient);
             
             // Stage 倒计时数字保持原有黄色
-            this.drawText(`${count}`, 1920 / 2, 700, 160, '#EBBF42');
+            this.drawText(`${count}`, this.logicalWidth / 2, 700, 160, '#EBBF42');
         }
     }
 
-    private drawStats(gameState: GameState): void {
-        const color = '#40C5EF';
-        const fontSize = 32;
-        const padding = 60;
-        
-        const stageText = `STAGE: ${gameState.stage}`;
-        const timeVal = Math.floor(gameState.stage_elapsed).toString().padStart(2, '0');
-        
-        this.drawText(stageText, padding, padding, fontSize, color, 'left');
-        
-        // "TIME: " 标签，右对齐在 1765
-        this.drawText("TIME: ", 1765, padding, fontSize, color, 'right');
-        
-        // 数字紧跟在 "TIME: " 后面，极致缩小间距 (1765 -> 1768)
-        this.drawText(timeVal, 1768, padding, fontSize, color, 'left');
-        
-        // 单位 "S" 紧随其后，数字 00 的宽度在 AlumniSans 下约 28-30px，所以 1798 比较紧凑
-        this.drawText("S", 1798, padding, fontSize, color, 'left');
+    private drawStats(state: GameState): void {
+        const padding = 40;
+        const topMargin = this.isMobile ? 80 : 40; // Avoid mobile status bar
+        const color = this.colorToCSS(this.theme.ui.stats_color);
+        const size = 28;
+
+        // Stage (Top Left)
+        this.drawText(
+            `${this.t('stage')} ${state.stage}`, 
+            padding, 
+            topMargin,
+            size,
+            color,
+            'left'
+        );
+
+        // Time (Top Right)
+        const timeStr = this.formatTime(state.stage_elapsed);
+        this.drawText(
+            `${this.t('time')}: ${timeStr}`, 
+            this.logicalWidth - padding, 
+            topMargin,
+            size,
+            color,
+            'right'
+        );
     }
 
     private drawStage5Pause(): void {

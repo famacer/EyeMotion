@@ -106,22 +106,22 @@ impl GameState {
                 self.ball.vy = new_angle.sin() * current_speed;
             }
         } else if self.stage == 3 {
-            // Stage 3: 前 22.5s 垂直居中运动，后 22.5s 水平居中运动
+            // Stage 3: 前 22.5s 水平居中运动，后 22.5s 垂直居中运动
             let is_first_half = self.stage_elapsed < 22.5;
             let base_speed = stage_speed(3);
             
             if is_first_half {
-                // 垂直运动：速度为水平速度的 0.7 倍 (x0.7)，位置强制居中
-                let v_speed = base_speed * 0.7;
-                self.ball.vx = 0.0;
-                self.ball.x = self.ball.screen_w / 2.0;
-                self.ball.vy = if self.ball.vy >= 0.0 { v_speed } else { -v_speed };
-            } else {
                 // 水平运动：标准速度 (x1.0)，位置强制居中
                 let h_speed = base_speed;
                 self.ball.vy = 0.0;
                 self.ball.y = self.ball.screen_h / 2.0;
                 self.ball.vx = if self.ball.vx >= 0.0 { h_speed } else { -h_speed };
+            } else {
+                // 垂直运动：速度为水平速度的 0.7 倍 (x0.7)，位置强制居中
+                let v_speed = base_speed * 0.7;
+                self.ball.vx = 0.0;
+                self.ball.x = self.ball.screen_w / 2.0;
+                self.ball.vy = if self.ball.vy >= 0.0 { v_speed } else { -v_speed };
             }
 
             if self.ball.update(dt)? {
@@ -198,8 +198,7 @@ impl GameState {
         self.transition_timer = 3.0; // 重置也统一为 3.0s
         self.paused = false;
         self.ball.reset(w, h);
-        self.ball
-            .set_speed(stage_speed(1), Some(stage_direction(1)));
+        self.ball.set_speed(stage_speed(1), Some(stage_direction(1)));
     }
 
     pub fn resize(&mut self, w: f64, h: f64) {
@@ -220,8 +219,8 @@ pub fn stage_direction(stage: i32) -> (f64, f64) {
             }
         }
         2 => {
-            // Stage 2: 垂直方向带有一点随机偏角 (5-15度)
-            let angle_deg = rng.gen_range(5.0..15.0);
+            // Stage 2: 垂直方向带有一点随机偏角 (7-17度)
+            let angle_deg = rng.gen_range(7.0..17.0);
             let angle_rad = angle_deg * PI / 180.0;
             let vx = if rng.gen_bool(0.5) { angle_rad.sin() } else { -angle_rad.sin() };
             let vy = if rng.gen_bool(0.5) { angle_rad.cos() } else { -angle_rad.cos() };
@@ -238,11 +237,11 @@ pub fn stage_direction(stage: i32) -> (f64, f64) {
             }
         }
         3 => {
-            // Stage 3 初始强制垂直向上或向下
+            // Stage 3 初始强制水平向左或向右
             if rng.gen_bool(0.5) {
-                (0.0, 1.0)
+                (1.0, 0.0)
             } else {
-                (0.0, -1.0)
+                (-1.0, 0.0)
             }
         }
         _ => (1.0, 1.0),

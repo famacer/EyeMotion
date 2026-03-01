@@ -25,10 +25,25 @@
         }
     </style>
     <script>
-        // 立即设置背景色
-        document.documentElement.style.backgroundColor = '#011368';
-        document.body.style.backgroundColor = '#011368';
+        document.addEventListener('DOMContentLoaded', () => {
+            // 立即设置背景色
+            document.documentElement.style.backgroundColor = '#011368';
+            document.body.style.backgroundColor = '#011368';
+            
+            // 移动端适配检测
+            const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            if (isMobile) {
+                document.documentElement.classList.add('mobile');
+                console.log('Mobile detected, adding .mobile class');
+            }
+        });
     </script>
+    <style>
+        /* 移动端样式覆盖 */
+        .mobile #window-controls {
+            display: none !important;
+        }
+    </style>
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>

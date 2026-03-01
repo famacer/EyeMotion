@@ -12,6 +12,10 @@ target/
 src-tauri/target/
 src-tauri/gen/schemas
 vcpkg/
+android_sdk/
+jdk-17/
+jdk17.zip
+downloads/
 
 # Compiled files
 *.exe

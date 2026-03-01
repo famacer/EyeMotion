@@ -73,22 +73,29 @@ pub fn exit_app() {
 
 #[tauri::command]
 pub fn minimize_window(window: Window) {
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
     let _ = window.minimize();
 }
 
 #[tauri::command]
 pub fn toggle_fullscreen(window: Window) {
-    let is_fullscreen = window.is_fullscreen().unwrap_or(false);
-    let _ = window.set_fullscreen(!is_fullscreen);
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        let is_fullscreen = window.is_fullscreen().unwrap_or(false);
+        let _ = window.set_fullscreen(!is_fullscreen);
+    }
 }
 
 #[tauri::command]
 pub fn show_main_window(window: Window) {
     // 强制设置全屏状态。在移除 window-state 插件后，
     // 这里确保窗口在从隐藏转为显示时，已经是全屏模式。
-    let _ = window.set_fullscreen(true);
-    let _ = window.show();
-    let _ = window.set_focus();
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        let _ = window.set_fullscreen(true);
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
 }
 
 #[tauri::command]
